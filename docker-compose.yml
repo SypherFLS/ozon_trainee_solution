@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ots-postgres
+    environment:
+      POSTGRES_USER: ots
+      POSTGRES_PASSWORD: ots
+      POSTGRES_DB: ots
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ots -d ots"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./backend
+    container_name: ots-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /config/config.yml
+    volumes:
+      - ./backend/deploy/config/config.yml:/config/config.yml:ro
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:

@@ -19,9 +19,9 @@ func NewGen() *Generator {
 
 func (g *Generator) Generate() (string, error) {
 	result := []byte{}
-	lenth := int64(len(g.alphabet))
+	length := int64(len(g.alphabet))
 	for i:= 0; i < g.length; i++ {
-		temp, err := rand.Int(rand.Reader, big.NewInt(lenth))
+		temp, err := rand.Int(rand.Reader, big.NewInt(length))
 		if err != nil {
 			return "", err
 		}

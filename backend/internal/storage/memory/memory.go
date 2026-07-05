@@ -1,8 +1,9 @@
 package memory
 
 import (
-	"errors"
 	"sync"
+
+	"ots/internal/apperrors"
 )
 
 type Storage struct {
@@ -23,6 +24,14 @@ func (s *Storage) Save(original, short string) error {
     s.mu.Lock()
     defer s.mu.Unlock()
 
+    if _, ok := s.byOriginal[original]; ok {
+        return nil
+    }
+
+    if _, ok := s.byShort[short]; ok {
+        return apperrors.ErrConflict
+    }
+
     s.byOriginal[original] = short
     s.byShort[short] = original
 
@@ -35,7 +44,7 @@ func (s *Storage) GetByOriginal(original string) (string, error) {
 
 	short, ok := s.byOriginal[original] 
 	if !ok {
-		return "", errors.New("not found")
+		return "", apperrors.ErrNotFound
 	}
 
 	return short, nil
@@ -47,7 +56,7 @@ func (s *Storage) GetByShort(short string) (string, error) {
 
     original, ok := s.byShort[short]
     if !ok {
-        return "", errors.New("not found")
+        return "", apperrors.ErrNotFound
     }
 
     return original, nil

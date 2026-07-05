@@ -1,6 +1,9 @@
 package service
 
 import (
+	"errors"
+
+	"ots/internal/apperrors"
 	"ots/internal/repository"
 	"ots/internal/shortener"
 )
@@ -22,20 +25,33 @@ func (s *Service) GetOriginal(short string) (string, error) {
 }
 
 func (s *Service) Shorten(url string) (string, error) {
-	if short, err := s.repo.GetByOriginal(url); err == nil {
+	short, err := s.repo.GetByOriginal(url)
+	if err == nil {
 		return short, nil
+	}
+	if !errors.Is(err, apperrors.ErrNotFound) {
+		return "", err
 	}
 
 	for {
 		short, err := s.gen.Generate()
 		if err != nil {
-			return "", err 
+			return "", err
 		}
 		if !s.repo.ExistsShort(short) {
 			if err := s.repo.Save(url, short); err != nil {
+				if errors.Is(err, apperrors.ErrConflict) {
+					continue
+				}
 				return "", err
 			}
-			return short, nil
+			short, err = s.repo.GetByOriginal(url)
+			if err == nil {
+				return short, nil
+			}
+			if !errors.Is(err, apperrors.ErrNotFound) {
+				return "", err
+			}
 		}
 	}
-}
+}	

@@ -8,10 +8,9 @@ import (
 
 func New(h *handler.Handler) http.Handler {
 	mux := http.NewServeMux()
-	
-	// mux.HandleFunc("/shorten", h.Shorten)
 
-	// mux.HandleFunc("/getoriginal", h.GetOriginal)
+	mux.HandleFunc("POST /shorten", h.Shorten)
+	mux.HandleFunc("GET /{code}", h.GetOriginal)
 
 	return mux
 }
