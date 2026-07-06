@@ -1,7 +1,10 @@
-.PHONY: run build test test-cover test-short test-bench docker-up docker-up-d docker-down docker-logs docker-build 
+.PHONY: run run-f-time build test test-cover test-short test-bench docker-up docker-up-d docker-down docker-logs docker-build 
 
 run:
 	cd backend && go run ./cmd/main.go
+
+run-f-time:
+	cd backend && fo mod download && go run ./cmd/main.go
 
 build:
 	cd backend && mkdir -p ./bin && go build -o ./bin/main ./cmd/main.go

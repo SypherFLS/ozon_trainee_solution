@@ -66,7 +66,7 @@ func (h *Handler) GetOriginal(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) respondError(w http.ResponseWriter, r *http.Request, err error) {
 	status, msg := mapError(err)
-	if status >= http.StatusInternalServerError {
+	if status >= http.StatusInternalServerError { //проверка на ошибку сервера
 		h.log.Error("request failed",
 			"err", err,
 			"method", r.Method,
@@ -84,6 +84,8 @@ func mapError(err error) (int, string) {
 		return http.StatusBadRequest, "invalid url"
 	case errors.Is(err, apperrors.ErrConflict):
 		return http.StatusConflict, "conflict"
+	case errors.Is(err, apperrors.ErrTooManyAttempts):
+    	return http.StatusTooManyRequests, "could not generate unique code"
 	default:
 		return http.StatusInternalServerError, "internal server error"
 	}
