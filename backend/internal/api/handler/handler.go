@@ -57,6 +57,10 @@ func (h *Handler) GetOriginal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// через редирект:
+	// http.Redirect(w, r, original, http.StatusTemporaryRedirect)
+
+	// через возврат джсона:
 	writeJSON(w, http.StatusOK, dto.OriginalResponse{URL: original})
 }
 

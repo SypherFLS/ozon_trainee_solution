@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/viper"
@@ -31,14 +33,38 @@ type DBConfig struct {
 	SSLMode  string `yaml:"sslmode"`
 }
 
-func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
-		log.Fatal("CONFIG_PATH is not set")
+func resolveConfigPath() (string, error) {
+	if configPath := os.Getenv("CONFIG_PATH"); configPath != "" {
+		if _, err := os.Stat(configPath); err != nil {
+			return "", fmt.Errorf("config file does not exist: %s", configPath)
+		}
+		return configPath, nil
 	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatalf("config file does not exist: %s", configPath)
+	candidates := []string{
+		"config.yaml",
+		"config.yml",
+		filepath.Join("config", "config.yaml"),
+		filepath.Join("config", "config.yml"),
+		filepath.Join("deploy", "config", "config.yml"),
+	}
+
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			if absCandidate, absErr := filepath.Abs(candidate); absErr == nil {
+				return absCandidate, nil
+			}
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("config file not found; set CONFIG_PATH explicitly")
+}
+
+func MustLoad() *Config {
+	configPath, err := resolveConfigPath()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	viper.SetConfigFile(configPath)
@@ -54,27 +80,6 @@ func MustLoad() *Config {
 		log.Fatalf("error unmarshaling config: %s", err)
 	}
 
-	// applyDefaults(&cfg)
 	return &cfg
 }
 
-// func applyDefaults(cfg *Config) {
-// 	if cfg.Env == "" {
-// 		cfg.Env = "local"
-// 	}
-// 	if cfg.HTTP.Host == "" {
-// 		cfg.HTTP.Host = "localhost:8080"
-// 	}
-// 	if cfg.HTTP.Timeout == 0 {
-// 		cfg.HTTP.Timeout = 30 * time.Second
-// 	}
-// 	if cfg.HTTP.IdleTimeout == 0 {
-// 		cfg.HTTP.IdleTimeout = 60 * time.Second
-// 	}
-// 	if cfg.DB.SSLMode == "" {
-// 		cfg.DB.SSLMode = "disable"
-// 	}
-// 	if cfg.Storage == "" {
-// 		cfg.Storage = "memory"
-// 	}
-// }

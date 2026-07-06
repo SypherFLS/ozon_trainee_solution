@@ -29,6 +29,7 @@ func (s *Service) Shorten(url string) (string, error) {
 	if err == nil {
 		return short, nil
 	}
+	
 	if !errors.Is(err, apperrors.ErrNotFound) {
 		return "", err
 	}
